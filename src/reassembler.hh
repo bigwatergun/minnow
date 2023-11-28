@@ -3,9 +3,19 @@
 #include "byte_stream.hh"
 
 #include <string>
+#include <vector>
+#include <limits>
 
 class Reassembler
 {
+private:
+  /* simply use a string as sequence to store unordered bytes. */
+  std::string seq{""};
+  /* use a boolean vector to decide whether a char is "fake". */
+  std::vector<bool> seq_inf{};
+  uint64_t pending_bytes{0};
+  uint64_t last_index{std::numeric_limits<u_int64_t>::max()};
+
 public:
   /*
    * Insert a new substring to be reassembled into a ByteStream.

@@ -1,6 +1,7 @@
 #pragma once
 
-#include <queue>
+#include <deque>
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -11,8 +12,14 @@ class Writer;
 class ByteStream
 {
 protected:
-  uint64_t capacity_;
+  uint64_t capacity_; 
   // Please add any additional state to the ByteStream here, and not to the Writer and Reader interfaces.
+  // std::deque<uint8_t> stream; // use byte as a unit.
+  std::string stream; // we can simply use string as the stream. Perhaps the best solution is to implement a repeated queue by oneself.
+  bool close_sig;
+  bool error_sig;
+  uint64_t bytes_pushed_;
+  uint64_t bytes_popped_;
 
 public:
   explicit ByteStream( uint64_t capacity );
@@ -35,6 +42,9 @@ public:
   bool is_closed() const;              // Has the stream been closed?
   uint64_t available_capacity() const; // How many bytes can be pushed to the stream right now?
   uint64_t bytes_pushed() const;       // Total number of bytes cumulatively pushed to the stream
+
+  uint64_t bytes_buffered() const; // Number of bytes currently buffered (pushed and not popped)
+  uint64_t bytes_popped() const;   // Total number of bytes cumulatively popped from stream
 };
 
 class Reader : public ByteStream

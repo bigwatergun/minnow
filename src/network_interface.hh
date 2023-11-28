@@ -1,5 +1,6 @@
 #pragma once
 
+#include "arp_message.hh"
 #include "address.hh"
 #include "ethernet_frame.hh"
 #include "ipv4_datagram.hh"
@@ -40,6 +41,20 @@ private:
 
   // IP (known as Internet-layer or network-layer) address of the interface
   Address ip_address_;
+
+  struct ARP_item {
+    EthernetAddress addr;
+    size_t last_tick_time;
+  };
+
+  std::unordered_map<uint32_t, ARP_item> ARP_table;
+  /* use a queue to buffer ARPMessages. */
+  std::queue<std::pair<ARPMessage, EthernetAddress>> ARP_msg{};
+  /* use a vec to buffer gonna-send frames, optional represents the existance of an ARP_tabel item
+    when we call send_datagram. Use list should be better... */
+  std::vector<std::pair<EthernetFrame, std::optional<uint32_t>>> frame_to_send{};
+  /* record how long a ARP_REQUEST has been sent for. */
+  std::unordered_map<uint32_t, size_t> ARP_sent_time{};
 
 public:
   // Construct a network interface with given Ethernet (network-access-layer) and IP (internet-layer)
