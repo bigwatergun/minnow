@@ -47,7 +47,7 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
     arp.target_ip_address = next_hop.ipv4_numeric();
     has_ARP_item = next_hop.ipv4_numeric();
 
-    /* buffer an ARPMessage. */
+    /* buffer an ARPMessage. */ 
     // ARP_frame_.payload = std::move(serialize(arp));
     ARP_msg.push(make_pair(arp, ETHERNET_BROADCAST));
   }

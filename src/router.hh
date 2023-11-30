@@ -4,6 +4,12 @@
 
 #include <optional>
 #include <queue>
+#include <sstream>
+#include <iomanip>
+
+/* debug 10.1 problem. */
+std::string concat( std::vector<Buffer>& buffers );
+std::string prettify_test( std::string_view str, size_t max_length = 32UL );
 
 // A wrapper for NetworkInterface that makes the host-side
 // interface asynchronous: instead of returning received datagrams

@@ -42,20 +42,49 @@ void Router::route() {
       if (dgram.header.ttl == 1 || dgram.header.ttl == 0) {
         continue;
       }
-      dgram.header.ttl -= 1;
+      dgram.header.ttl--;
+      dgram.header.compute_checksum(); // don't forget to recompute checksum, cause 10.1 bug!!!
 
       /* search the route for this dgram. */
-      for (auto route_it = route_table.rbegin(); route_it != route_table.rend(); route_it++) {
+      auto route_it = route_table.rbegin(); 
+      for (; route_it != route_table.rend() - 1; route_it++) {
         uint8_t tar_offset = (uint8_t)32 - route_it->prefix_length;
         
         /* hit an item. */
         if (route_it->route_prefix >> tar_offset == dgram.header.dst >> tar_offset) {
           interface(route_it->interface_num).send_datagram(dgram, route_it->next_hop.value_or(Address::from_ipv4_numeric(dgram.header.dst)));
-          break;
+          return;
         }
       }
 
-      /* if we didn't found an hit item for this dgram. Simply drop it. */
+      /* if we didn't found an hit item for this dgram. Simply send it through 0.0.0.0 (suck werror, it makes runtime error: shift exponent 32 is too large for 32-bit type 'unsigned int) */
+      interface(route_it->interface_num).send_datagram(dgram, route_it->next_hop.value_or(Address::from_ipv4_numeric(dgram.header.dst)));
     }
   }
+}
+
+/* debug 10.1 problem. */
+std::string prettify_test( std::string_view str, size_t max_length )
+{
+  std::ostringstream ss;
+  const std::string_view str_prefix = str.substr( 0, max_length );
+  for ( const uint8_t ch : str_prefix ) {
+    if ( isprint( ch ) ) {
+      ss << ch;
+    } else {
+      ss << "\\x" << std::fixed << std::setw( 2 ) << std::setfill( '0' ) << std::hex << static_cast<size_t>( ch );
+    }
+  }
+  if ( str.size() > str_prefix.size() ) {
+    ss << "...";
+  }
+  return ss.str();
+}
+
+std::string concat( std::vector<Buffer>& buffers )
+{
+  return std::accumulate(
+    buffers.begin(), buffers.end(), std::string {}, []( const std::string& x, const Buffer& y ) {
+      return x + static_cast<std::string>( y );
+    } );
 }
